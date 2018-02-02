@@ -1,5 +1,3 @@
-
-
 from googleapiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
 from sys import stdout
@@ -8,7 +6,9 @@ from copy import deepcopy
 import pandas as pd
 import numpy as np
 import httplib2, os
+import logging
 
+logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
 from ._query_parser import QueryParser
 
 SCOPES = 'https://www.googleapis.com/auth/analytics.readonly'
@@ -141,30 +141,33 @@ class GoogleAnalyticsQuery(GoogleServiceReader):
             # Get the rows from the GA report
             rows = report.get('data', {}).get('rows')
             # Let's loop through the rows to get the dimensions and metrics to row list
-            for row in rows:
-                row_list = row.get('dimensions', [])
+            if rows:
+                for row in rows:
+                    row_list = row.get('dimensions', [])
 
-                if 'metrics' in list(row.keys()):
-                    metrics = row.get('metrics', [])
-                    for m in metrics:
-                        row_list = row_list + m.get('values')
+                    if 'metrics' in list(row.keys()):
+                        metrics = row.get('metrics', [])
+                        for m in metrics:
+                            row_list = row_list + m.get('values')
 
-                # Make each row an enumerated dictionary with index value starting
-                # at 0
-                drow = {}
-                for i, c in enumerate(cols):
-                    drow.update({c : row_list[i]})
+                    # Make each row an enumerated dictionary with index value starting
+                    # at 0
+                    drow = {}
+                    for i, c in enumerate(cols):
+                        drow.update({c : row_list[i]})
 
-                # Concatanate the row to the overall list
-                df = pd.concat((df, pd.DataFrame(drow, index=[0])),
-                               ignore_index=True)
+                    # Concatanate the row to the overall list
+                    df = pd.concat((df, pd.DataFrame(drow, index=[0])),
+                                ignore_index=True)
 
-            # Copy the dataframe to the returning object
-            out = pd.concat((out, df), ignore_index=True)
-            # Convert the object types to the inferred ones
-            out = out.apply(pd.to_numeric, errors='ignore', axis=1)
-            # Explicitly convert date back to a date object
-            if 'date' in out.columns:
-                out['date'] = pd.to_datetime(out['date'], format="%Y%m%d")
+                # Copy the dataframe to the returning object
+                out = pd.concat((out, df), ignore_index=True)
+                # Convert the object types to the inferred ones
+                out = out.apply(pd.to_numeric, errors='ignore', axis=1)
+                # Explicitly convert date back to a date object
+                if 'date' in out.columns:
+                    out['date'] = pd.to_datetime(out['date'], format="%Y%m%d")
+            else:
+                out = pd.DataFrame()
 
         return out
