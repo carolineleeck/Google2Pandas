@@ -12,15 +12,15 @@ logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
 from ._query_parser import QueryParser
 
 SCOPES = 'https://www.googleapis.com/auth/analytics.readonly'
-default_discovery = 'https://analyticsreporting.googleapis.com/$discovery/rest'
+ADWORDS_SCOPES = 'https://www.googleapis.com/auth/adwords'
 
 
-class GoogleServiceReader(object):
+class OAuthDataReader(object):
     '''
     Abstract class for handling OAuth2 authentication using the Google
     oauth2client library and the V4 Analytics API
     '''
-    def __init__(self, scope, discovery_uri):
+    def __init__(self, scope):
         '''
         Parameters:
         -----------
@@ -33,7 +33,35 @@ class GoogleServiceReader(object):
                 Designates discovery uri(s)
         '''
         self._scope_ = scope
-        self._discovery_ = discovery_uri
+        self._api_ = 'v4'
+
+    def _init_service(self, secrets):
+        creds = ServiceAccountCredentials.from_json_keyfile_name(secrets,
+                                                                 scopes=self._scope_)
+
+        http = creds.authorize(httplib2.Http())
+
+        return build('analytics',
+                     self._api_,
+                     http=http)
+
+
+class GoogleServiceReader(object):
+    '''
+    Abstract class for handling OAuth2 authentication using the Google
+    oauth2client library and the V4 Analytics API
+    '''
+    def __init__(self, scope, service='analyticsreporting'):
+        '''
+        Parameters:
+        -----------
+            secrets : string
+                Path to client_secrets.json file. p12 formatted keys not
+                supported at this point.
+            scope : list or string
+                Designates the authentication scope(s).
+        '''
+        self._scope_ = scope
         self._api_ = 'v4'
 
     def _init_service(self, credentials):
@@ -46,7 +74,8 @@ class GoogleServiceReader(object):
         return analytics                   
 
 
-class GoogleAnalyticsQuery(GoogleServiceReader):
+
+class GoogleAnalyticsQuery(OAuthDataReader):
     def __init__(self, secrets_location):
         '''
         Query the GA API with ease!  Simply pass the service credentials file
@@ -66,7 +95,7 @@ class GoogleAnalyticsQuery(GoogleServiceReader):
         -----------
             query: dict
                 Refer to:
-
+                    https://developers.google.com/analytics/devguides/reporting/core/dimsmets#q=channel&cats=user,session,traffic_sources,adwords,goal_conversions,platform_or_device,geo_network,system,social_activities,page_tracking,content_grouping,internal_search,site_speed,app_tracking,event_tracking,ecommerce,social_interactions,user_timings,exceptions,content_experiments,custom_variables_or_columns,time,doubleclick_campaign_manager,audience,adsense,ad_exchange,doubleclick_for_publishers,doubleclick_for_publishers_backfill,lifetime_value_and_cohorts,channel_grouping,related_products,doubleclick_bid_manager,doubleclick_search
                     https://developers.google.com/analytics/devguides/reporting/core/v4/rest/v4/reports
 
                 for guidance. Automatic parsing has been deprecated in V4.
@@ -171,3 +200,6 @@ class GoogleAnalyticsQuery(GoogleServiceReader):
                 out = pd.DataFrame()
 
         return out
+
+
+        
