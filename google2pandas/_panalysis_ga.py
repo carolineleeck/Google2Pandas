@@ -18,7 +18,7 @@ class GoogleServiceReader(object):
     Abstract class for handling OAuth2 authentication using the Google
     oauth2client library and the V4 Analytics API
     '''
-    def __init__(self, scope, service='analyticsreporting'):
+    def __init__(self):
         '''
         Parameters:
         -----------
@@ -32,7 +32,7 @@ class GoogleServiceReader(object):
         self._api_ = 'v4'
 
     def _init_service(self, credentials):
-        credentials = ServiceAccountCredentials.from_json_keyfile_name(credentials, self._scope_)
+        credentials = ServiceAccountCredentials.from_json_keyfile_name(credentials, scopes=self._scope_)
 
         analytics = build(
             'analyticsreporting', 
@@ -51,6 +51,7 @@ class GoogleAnalyticsQuery(GoogleServiceReader):
             https://developers.google.com/analytics/devguides/reporting/core/v4/parameters
         '''
         super(GoogleAnalyticsQuery).__init__()
+        print(self._scope_)
         self._service = self._init_service(secrets_location)
 
     
