@@ -12,7 +12,6 @@ logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
 from ._query_parser import QueryParser
 
 SCOPES = 'https://www.googleapis.com/auth/analytics.readonly'
-ADWORDS_SCOPES = 'https://www.googleapis.com/auth/adwords'
 
 
 class OAuthDataReader(object):
@@ -55,7 +54,7 @@ class GoogleAnalyticsQuery(OAuthDataReader):
 
             https://developers.google.com/analytics/devguides/reporting/core/v4/parameters
         '''
-        
+        super(GoogleAnalyticsQuery, self).__init__()
         self._service = self._init_service(secrets_location)
 
     def execute_query(self, query, as_dict=False, all_results=True):
