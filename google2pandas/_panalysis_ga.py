@@ -13,13 +13,12 @@ from ._query_parser import QueryParser
 
 SCOPES = 'https://www.googleapis.com/auth/analytics.readonly'
 
-
-class OAuthDataReader(object):
+class GoogleServiceReader(object):
     '''
     Abstract class for handling OAuth2 authentication using the Google
     oauth2client library and the V4 Analytics API
     '''
-    def __init__(self):
+    def __init__(self, scope, service='analyticsreporting'):
         '''
         Parameters:
         -----------
@@ -28,24 +27,21 @@ class OAuthDataReader(object):
                 supported at this point.
             scope : list or string
                 Designates the authentication scope(s).
-            discovery_uri : tuple or string
-                Designates discovery uri(s)
         '''
         self._scope_ = SCOPES
         self._api_ = 'v4'
 
-    def _init_service(self, secrets):
-        creds = ServiceAccountCredentials.from_json_keyfile_name(secrets,
-                                                                 scopes=self._scope_)
+    def _init_service(self, credentials):
+        credentials = ServiceAccountCredentials.from_json_keyfile_name(credentials, self._scope_)
 
-        http = creds.authorize(httplib2.Http())
+        analytics = build(
+            'analyticsreporting', 
+            'v4', 
+            credentials=credentials)  
+        return analytics                   
 
-        return build('analytics',
-                     self._api_,
-                     http=http)
 
-
-class GoogleAnalyticsQuery(OAuthDataReader):
+class GoogleAnalyticsQuery(GoogleServiceReader):
     def __init__(self, secrets_location):
         '''
         Query the GA API with ease!  Simply pass the service credentials file
@@ -54,9 +50,10 @@ class GoogleAnalyticsQuery(OAuthDataReader):
 
             https://developers.google.com/analytics/devguides/reporting/core/v4/parameters
         '''
-        super(GoogleAnalyticsQuery, self).__init__()
+        super(GoogleAnalyticsQuery).init()
         self._service = self._init_service(secrets_location)
 
+    
     def execute_query(self, query, as_dict=False, all_results=True):
         '''
         Execute **query and translate it to a pandas.DataFrame object.
@@ -170,6 +167,3 @@ class GoogleAnalyticsQuery(OAuthDataReader):
                 out = pd.DataFrame()
 
         return out
-
-
-        
