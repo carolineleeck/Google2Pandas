@@ -20,7 +20,7 @@ class OAuthDataReader(object):
     Abstract class for handling OAuth2 authentication using the Google
     oauth2client library and the V4 Analytics API
     '''
-    def __init__(self, scope):
+    def __init__(self):
         '''
         Parameters:
         -----------
@@ -32,7 +32,7 @@ class OAuthDataReader(object):
             discovery_uri : tuple or string
                 Designates discovery uri(s)
         '''
-        self._scope_ = scope
+        self._scope_ = SCOPES
         self._api_ = 'v4'
 
     def _init_service(self, secrets):
@@ -44,35 +44,6 @@ class OAuthDataReader(object):
         return build('analytics',
                      self._api_,
                      http=http)
-
-
-class GoogleServiceReader(object):
-    '''
-    Abstract class for handling OAuth2 authentication using the Google
-    oauth2client library and the V4 Analytics API
-    '''
-    def __init__(self, scope, service='analyticsreporting'):
-        '''
-        Parameters:
-        -----------
-            secrets : string
-                Path to client_secrets.json file. p12 formatted keys not
-                supported at this point.
-            scope : list or string
-                Designates the authentication scope(s).
-        '''
-        self._scope_ = scope
-        self._api_ = 'v4'
-
-    def _init_service(self, credentials):
-        credentials = ServiceAccountCredentials.from_json_keyfile_name(credentials, SCOPES)
-
-        analytics = build(
-            'analyticsreporting', 
-            'v4', 
-            credentials=credentials)  
-        return analytics                   
-
 
 
 class GoogleAnalyticsQuery(OAuthDataReader):
