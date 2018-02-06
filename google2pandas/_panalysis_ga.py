@@ -51,7 +51,6 @@ class GoogleAnalyticsQuery(GoogleServiceReader):
             https://developers.google.com/analytics/devguides/reporting/core/v4/parameters
         '''
         super(GoogleAnalyticsQuery, self).__init__()
-        print(self._scope_)
         self._service = self._init_service(secrets_location)
 
     
